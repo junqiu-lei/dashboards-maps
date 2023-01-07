@@ -11,11 +11,11 @@ import 'cypress-file-upload';
 describe('Verify successful custom geojson file upload', () => {
   before(() => {
     cy.visit(`${BASE_PATH}/app/home#/tutorial_directory/sampleData`);
-    cy.wait(5000)
-      .get('div[data-test-subj="sampleDataSetCardflights"]')
+    cy.wait(10000);
+    cy.get('div[data-test-subj="sampleDataSetCardflights"]')
       .contains(/(Add|View) data/)
       .click();
-    cy.wait(10000);
+    cy.wait(30000);
 
     cy.visit(`${BASE_PATH}/app/visualize#/`);
 
