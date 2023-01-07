@@ -10,7 +10,7 @@ import { BASE_PATH } from '../utils/constants';
 describe('Verify the presence of import custom map tab in region map plugin', () => {
   before(() => {
     cy.visit(`${BASE_PATH}/app/home#/tutorial_directory/sampleData`);
-    cy.wait(10000);
+    cy.wait(30000);
     cy.get('div[data-test-subj="sampleDataSetCardflights"]')
       .contains(/(Add|View) data/)
       .click();
