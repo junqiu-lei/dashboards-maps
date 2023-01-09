@@ -26,12 +26,6 @@ jobs:
       matrix:
         os: [ macos-latest ]
         include:
-          - os: windows-latest
-            working_directory: X:\
-            os_java_options: -Xmx4068M
-            cypress_cache_folder: ~/AppData/Local/Cypress/Cache
-          - os: ubuntu-latest
-            cypress_cache_folder: ~/.cache/Cypress
           - os: macos-latest
             cypress_cache_folder: ~/Library/Caches/Cypress
 
