@@ -158,7 +158,7 @@ jobs:
         with:
           working-directory: OpenSearch-Dashboards/plugins/dashboards-maps
           command: yarn run cypress run --browser chrome
-          wait-on: 'http://localhost:5601'
+          wait-on: 'http://localhost:5601, http://localhost:9200/'
         env:
           CYPRESS_CACHE_FOLDER: ${{ matrix.cypress_cache_folder }}
 
