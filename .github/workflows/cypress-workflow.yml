@@ -113,6 +113,8 @@ jobs:
         run: |
           cd OpenSearch-Dashboards
           yarn start --no-base-path --no-watch &
+          timeout 600 bash -c 'while [[ "$(curl http://localhost:5601/api/status | jq -r '.status.overall.state')" != "green" ]]; do echo sleeping 5; sleep 5; done'
+          curl -s http://localhost:5601/api/status | jq
         shell: bash
 
       # Window is slow so wait longer
@@ -158,8 +160,7 @@ jobs:
         with:
           working-directory: OpenSearch-Dashboards/plugins/dashboards-maps
           command: yarn run cypress run --browser chrome
-          wait-on: 'http://localhost:5601, http://localhost:9200/'
-          wait-on-timeout: 360
+          wait-on: 'http://localhost:5601'
         env:
           CYPRESS_CACHE_FOLDER: ${{ matrix.cypress_cache_folder }}
 
