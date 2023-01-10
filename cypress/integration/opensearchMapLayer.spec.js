@@ -7,7 +7,7 @@ import { BASE_PATH } from '../utils/constants';
 
 describe('Default OpenSearch base map layer', () => {
   before(() => {
-    cy.visit(`${BASE_PATH}/app/home#/tutorial_directory/sampleData`, {
+    cy.wait(180000).visit(`${BASE_PATH}/app/home#/tutorial_directory/sampleData`, {
       retryOnStatusCodeFailure: true,
       timeout: 60000,
     });

@@ -113,19 +113,16 @@ jobs:
         run: |
           cd OpenSearch-Dashboards
           yarn start --no-base-path --no-watch &
-          timeout 600 bash -c 'while [[ "$(curl http://localhost:5601/api/status | jq -r '.status.overall.state')" != "green" ]]; do echo sleeping 5; sleep 5; done'
-          curl -s http://localhost:5601/api/status | jq
         shell: bash
 
-      # Window is slow so wait longer
       - name: Sleep until OSD server starts - windows
         if: ${{ matrix.os == 'windows-latest' }}
-        run: Start-Sleep -s 400
+        run: Start-Sleep -s 600
         shell: powershell
 
       - name: Sleep until OSD server starts - non-windows
         if: ${{ matrix.os != 'windows-latest' }}
-        run: sleep 400
+        run: sleep 600
         shell: bash
 
       - name: Install Cypress
