@@ -24,3 +24,4 @@ Compatible with OpenSearch and OpenSearch Dashboards Version 2.5.0
 * Delete layer modal ([#139](https://github.com/opensearch-project/dashboards-maps/pull/139))
 * Add multi-layer support to map popup ([#140](https://github.com/opensearch-project/dashboards-maps/pull/140))
 * Support overriding maps config from OSD config yml file ([#202](https://github.com/opensearch-project/dashboards-maps/pull/202))
+ test
