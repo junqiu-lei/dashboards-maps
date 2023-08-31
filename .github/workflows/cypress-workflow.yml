@@ -13,7 +13,7 @@ env:
   OPENSEARCH_DASHBOARDS_BRANCH: 'main'
   GEOSPATIAL_PLUGIN_BRANCH: 'main'
 jobs:
-  tests:
+  cypresss-tests:
     env:
       # prevents extra Cypress installation progress messages
       CI: 1
@@ -116,12 +116,12 @@ jobs:
 
       - name: Sleep until OSD server starts - windows
         if: ${{ matrix.os == 'windows-latest' }}
-        run: Start-Sleep -s 600
+        run: Start-Sleep -s 60
         shell: powershell
 
       - name: Sleep until OSD server starts - non-windows
         if: ${{ matrix.os != 'windows-latest' }}
-        run: sleep 600
+        run: sleep 60
         shell: bash
 
       - name: Install Cypress
@@ -152,11 +152,11 @@ jobs:
           npm config delete script-shell
 
       - name: Run Cypress tests
-        uses: cypress-io/github-action@v5
+        uses: cypress-io/github-action@v6
         with:
           working-directory: OpenSearch-Dashboards/plugins/dashboards-maps
           command: yarn run cypress run --browser chrome
-          wait-on: 'http://localhost:5601'
+          wait-on: 'http://localhost:9200, http://localhost:5601'
         env:
           CYPRESS_CACHE_FOLDER: ${{ matrix.cypress_cache_folder }}
 
