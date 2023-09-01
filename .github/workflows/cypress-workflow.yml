@@ -114,6 +114,22 @@ jobs:
           yarn start --no-base-path --no-watch &
         shell: bash
 
+      - name: Verify OpenSearch Dashboards server availability
+        run: |
+          # Wait until the server responds with a success status (HTTP 200)
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            until $(curl --output /dev/null --silent --head --fail http://localhost:5601); do
+              echo "Waiting for OpenSearch Dashboards server to start..."
+              sleep 10
+            done
+          else
+            until curl --output /dev/null --silent --head --fail http://localhost:5601; do
+              echo "Waiting for OpenSearch Dashboards server to start..."
+              sleep 10
+            done
+          fi
+
+
       - name: Sleep until OSD server starts - windows
         if: ${{ matrix.os == 'windows-latest' }}
         run: Start-Sleep -s 60
