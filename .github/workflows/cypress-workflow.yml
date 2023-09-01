@@ -114,15 +114,22 @@ jobs:
           yarn start --no-base-path --no-watch &
         shell: bash
 
-      - name: Sleep until OSD server starts - windows
-        if: ${{ matrix.os == 'windows-latest' }}
-        run: Start-Sleep -s 60
-        shell: powershell
-
-      - name: Sleep until OSD server starts - non-windows
-        if: ${{ matrix.os != 'windows-latest' }}
-        run: sleep 60
-        shell: bash
+      - name: Verify OpenSearch Dashboards server availability
+        shell: pwsh
+        run: |
+          # Wait until the server responds with a success status (HTTP 200)
+          while ($true) {
+            try {
+              $response = Invoke-WebRequest -Uri http://localhost:5601/api/maps-dashboards/stats
+              if ($response.StatusCode -eq 200) {
+                Write-Output "OpenSearch Dashboards server is available."
+                break
+              }
+            } catch {
+              Write-Output "Waiting for OpenSearch Dashboards server to start..."
+              Start-Sleep -Seconds 10
+            }
+          }
 
       - name: Install Cypress
         run: |
@@ -156,7 +163,7 @@ jobs:
         with:
           working-directory: OpenSearch-Dashboards/plugins/dashboards-maps
           command: yarn run cypress run --browser chrome
-          wait-on: 'http://localhost:9200, http://localhost:5601'
+          wait-on: 'http://localhost:9200, http://localhost:5601/api/maps-dashboards/stats'
         env:
           CYPRESS_CACHE_FOLDER: ${{ matrix.cypress_cache_folder }}
 
