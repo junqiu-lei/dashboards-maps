@@ -166,7 +166,7 @@ Object {
                   Map name guidleines:
                   <ul>
                     <li>
-                       Map name prefix must contain 1-250 characters. 
+                       Map name prefix must contain 1-250 characters.
                     </li>
                     <li>
                        Map name prefix must start with a-z.
@@ -385,7 +385,7 @@ Object {
                 Map name guidleines:
                 <ul>
                   <li>
-                     Map name prefix must contain 1-250 characters. 
+                     Map name prefix must contain 1-250 characters.
                   </li>
                   <li>
                      Map name prefix must start with a-z.
