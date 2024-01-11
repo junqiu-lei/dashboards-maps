@@ -11,6 +11,7 @@ on:
       - 2.*
 env:
   OPENSEARCH_DASHBOARDS_BRANCH: 'main'
+  OPENSEARCH_VERSION: '3.0.0-SNAPSHOT'
   GEOSPATIAL_PLUGIN_BRANCH: 'main'
 jobs:
   tests:
@@ -111,7 +112,7 @@ jobs:
       - name: Run OpenSearch Dashboards server
         run: |
           cd OpenSearch-Dashboards
-          yarn start --no-base-path --no-watch &
+          yarn start --no-base-path --no-watch --server.host="0.0.0.0" &
         shell: bash
 
       - name: Sleep until OSD server starts - windows
@@ -155,8 +156,7 @@ jobs:
         uses: cypress-io/github-action@v5
         with:
           working-directory: OpenSearch-Dashboards/plugins/dashboards-maps
-          command: yarn run cypress run --browser chrome
-          wait-on: 'http://localhost:5601'
+          command: yarn run cypress run --browser electron --headless
         env:
           CYPRESS_CACHE_FOLDER: ${{ matrix.cypress_cache_folder }}
 
