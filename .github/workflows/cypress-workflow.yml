@@ -117,7 +117,7 @@ jobs:
 
       - name: Sleep until OSD server starts - windows
         if: ${{ matrix.os == 'windows-latest' }}
-        run: Start-Sleep -s 600
+        run: Start-Sleep -s 900
         shell: powershell
 
       - name: Sleep until OSD server starts - non-windows
@@ -156,19 +156,18 @@ jobs:
         uses: cypress-io/github-action@v5
         with:
           working-directory: OpenSearch-Dashboards/plugins/dashboards-maps
-          command: yarn run cypress run --browser electron --headless
-        env:
-          CYPRESS_CACHE_FOLDER: ${{ matrix.cypress_cache_folder }}
+          command: yarn run cypress run
+          browser: electron
 
       # Screenshots are only captured on failure, will change this once we do visual regression tests
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v4.2.0
         if: failure()
         with:
           name: cypress-screenshots-${{ matrix.os }}
           path: OpenSearch-Dashboards/plugins/dashboards-maps/cypress/screenshots
 
       # Test run video was always captured, so this action uses "always()" condition
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v4.2.0
         if: always()
         with:
           name: cypress-videos-${{ matrix.os }}
