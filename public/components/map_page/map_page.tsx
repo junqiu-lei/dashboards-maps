@@ -32,6 +32,7 @@ import { MapState } from '../../model/mapState';
 import { GeoShapeFilterMeta, ShapeFilter } from '../../../../../src/plugins/data/common';
 import { buildGeoShapeFilterMeta } from '../../model/geo/filter';
 import { FilterBar } from '../filter_bar/filter_bar';
+import { getDataLayers } from '../../model/layersFunctions';
 
 export interface DashboardProps {
   timeRange?: TimeRange;
@@ -49,15 +50,20 @@ export const MapComponent = ({ mapIdFromSavedObject, dashboardProps }: MapCompon
   const { services } = useOpenSearchDashboards<MapServices>();
   const {
     savedObjects: { client: savedObjectsClient },
+    dataSourceManagement,
+    setActionMenu,
+    notifications,
   } = services;
   const [layers, setLayers] = useState<MapLayerSpecification[]>([]);
-  const [savedMapObject, setSavedMapObject] =
-    useState<SimpleSavedObject<MapSavedObjectAttributes> | null>();
+  const [savedMapObject, setSavedMapObject] = useState<SimpleSavedObject<
+    MapSavedObjectAttributes
+  > | null>();
   const [layersIndexPatterns, setLayersIndexPatterns] = useState<IndexPattern[]>([]);
   const maplibreRef = useRef<Maplibre | null>(null);
   const [mapState, setMapState] = useState<MapState>(getInitialMapState());
   const [isUpdatingLayerRender, setIsUpdatingLayerRender] = useState(true);
   const isReadOnlyMode = !!dashboardProps;
+  const [indexPatternIds, setIndexPatternIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (mapIdFromSavedObject) {
@@ -75,6 +81,10 @@ export const MapComponent = ({ mapIdFromSavedObject, dashboardProps }: MapCompon
             savedIndexPatterns.push(indexPattern);
           }
         });
+        const ipIds: string[] = Array.from(
+          new Set(getDataLayers(layers).map((layer) => layer.source.indexPatternId))
+        );
+        setIndexPatternIds(ipIds);
         setLayersIndexPatterns(savedIndexPatterns);
       });
     } else {
@@ -112,6 +122,10 @@ export const MapComponent = ({ mapIdFromSavedObject, dashboardProps }: MapCompon
     'globalFilterGroup__wrapper-isVisible': !!mapState.spatialMetaFilters?.length,
   });
 
+  const dataSourceManagementEnabled: boolean = !!dataSourceManagement;
+
+  console.log(indexPatternIds, 'Print-----indexPatternIds-----MapComponent');
+
   return (
     <div className="map-page">
       {isReadOnlyMode ? null : (
@@ -124,6 +138,20 @@ export const MapComponent = ({ mapIdFromSavedObject, dashboardProps }: MapCompon
           mapState={mapState}
           setMapState={setMapState}
           setIsUpdatingLayerRender={setIsUpdatingLayerRender}
+        />
+      )}
+      {dataSourceManagementEnabled && (
+        // @ts-ignore
+        <dataSourceManagement.ui.DataSourceMenu
+          setMenuMountPoint={setActionMenu}
+          showDataSourceAggregatedView={true}
+          activeDatasourceIds={indexPatternIds}
+          savedObjects={savedObjectsClient}
+          notifications={notifications}
+          appName={'mapsPageDataSourceMenu'}
+          hideLocalCluster={false}
+          fullWidth={true}
+          displayAllCompatibleDataSources={true}
         />
       )}
       {!isReadOnlyMode && !!mapState.spatialMetaFilters?.length && (

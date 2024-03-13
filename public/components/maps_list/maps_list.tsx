@@ -116,7 +116,6 @@ export const MapsList = () => {
     />
   );
   const dataSourceManagementEnabled: boolean = !!dataSourceManagement;
-  console.log('test: ', setActionMenu);
   // Render the map list DOM.
   return (
     <I18nProvider>
@@ -130,7 +129,7 @@ export const MapsList = () => {
                   showDataSourceAggregatedView={true}
                   savedObjects={savedObjectsClient}
                   notifications={notifications}
-                  appName={'mapsListTestDataSourceMenu'}
+                  appName={'mapsListDataSourceMenu'}
                   hideLocalCluster={false}
                   fullWidth={true}
                   displayAllCompatibleDataSources={true}
