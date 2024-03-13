@@ -22,9 +22,8 @@ import { MapSavedObjectAttributes } from '../../../common/map_saved_object_attri
 import { MapServices } from '../../types';
 import { getMapsLandingBreadcrumbs } from '../../utils/breadcrumbs';
 import { APP_PATH, MAPS_APP_ID } from '../../../common';
-import { MountPoint } from '../../../../../src/core/public';
 
-export const MapsList = (setHeaderActionMenu: (menuMount: MountPoint | undefined) => void) => {
+export const MapsList = () => {
   const {
     services: {
       notifications,
@@ -32,6 +31,7 @@ export const MapsList = (setHeaderActionMenu: (menuMount: MountPoint | undefined
       application: { navigateToApp },
       chrome: { docTitle, setBreadcrumbs },
       dataSourceManagement,
+      setActionMenu,
     },
   } = useOpenSearchDashboards<MapServices>();
 
@@ -116,7 +116,7 @@ export const MapsList = (setHeaderActionMenu: (menuMount: MountPoint | undefined
     />
   );
   const dataSourceManagementEnabled: boolean = !!dataSourceManagement;
-  console.log('test: ', setHeaderActionMenu);
+  console.log('test: ', setActionMenu);
   // Render the map list DOM.
   return (
     <I18nProvider>
@@ -126,7 +126,7 @@ export const MapsList = (setHeaderActionMenu: (menuMount: MountPoint | undefined
             <EuiPageContentBody>
               {dataSourceManagementEnabled && (
                 <dataSourceManagement.ui.DataSourceMenu
-                  setMenuMountPoint={setHeaderActionMenu}
+                  setMenuMountPoint={setActionMenu}
                   showDataSourceAggregatedView={true}
                   savedObjects={savedObjectsClient}
                   notifications={notifications}

@@ -92,6 +92,7 @@ export class CustomImportMapPlugin
           uiSettings: coreStart.uiSettings,
           mapConfig,
           dataSourceManagement,
+          setActionMenu: params.setHeaderActionMenu,
         };
         params.element.classList.add('mapAppContainer');
         // Render the application

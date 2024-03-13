@@ -12,7 +12,7 @@ import { APP_PATH } from '../../common';
 import { useOpenSearchDashboards } from '../../../../src/plugins/opensearch_dashboards_react/public';
 import { MapServices } from '../types';
 
-export const MapsDashboardsApp = (setHeaderActionMenu: any) => {
+export const MapsDashboardsApp = () => {
   const {
     services: { appBasePath },
   } = useOpenSearchDashboards<MapServices>();
@@ -25,7 +25,7 @@ export const MapsDashboardsApp = (setHeaderActionMenu: any) => {
           <Route
             exact
             path={APP_PATH.LANDING_PAGE_PATH}
-            render={() => <MapsList setHeaderActionMenu={setHeaderActionMenu} />}
+            render={() => <MapsList />}
           />
         </Switch>
       </I18nProvider>

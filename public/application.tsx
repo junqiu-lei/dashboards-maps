@@ -11,13 +11,13 @@ import { MapsDashboardsApp } from './components/app';
 import { OpenSearchDashboardsContextProvider } from '../../../src/plugins/opensearch_dashboards_react/public';
 
 export const renderApp = (
-  { element, setHeaderActionMenu }: AppMountParameters,
+  { element }: AppMountParameters,
   services: MapServices,
   dataSourceManagementEnabled: boolean
 ) => {
   ReactDOM.render(
     <OpenSearchDashboardsContextProvider services={services}>
-      <MapsDashboardsApp setHeaderActionMenu={setHeaderActionMenu} />
+      <MapsDashboardsApp />
     </OpenSearchDashboardsContextProvider>,
     element
   );
