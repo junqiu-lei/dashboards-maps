@@ -29,7 +29,7 @@ import { IndexPattern } from '../../../../../src/plugins/data/public';
 import { AddLayerPanel } from '../add_layer_panel';
 import { LayerConfigPanel } from '../layer_config';
 import { MapLayerSpecification } from '../../model/mapLayerType';
-import { LAYER_ICON_TYPE_MAP } from '../../../common';
+import { DASHBOARDS_MAPS_LAYER_TYPE, LAYER_ICON_TYPE_MAP } from '../../../common';
 import { useOpenSearchDashboards } from '../../../../../src/plugins/opensearch_dashboards_react/public';
 import { MapServices } from '../../types';
 import { MapState } from '../../model/mapState';
@@ -49,6 +49,7 @@ interface Props {
   selectedLayerConfig: MapLayerSpecification | undefined;
   setSelectedLayerConfig: (layerConfig: MapLayerSpecification | undefined) => void;
   setIsUpdatingLayerRender: (isUpdatingLayerRender: boolean) => void;
+  setDataSourceRefIds: (dataSourceRefIds: string[]) => void;
 }
 
 export const LayerControlPanel = memo(
@@ -56,11 +57,14 @@ export const LayerControlPanel = memo(
     maplibreRef,
     setLayers,
     layers,
+    layersIndexPatterns,
+    setLayersIndexPatterns,
     zoom,
     isReadOnlyMode,
     selectedLayerConfig,
     setSelectedLayerConfig,
     setIsUpdatingLayerRender,
+    setDataSourceRefIds,
   }: Props) => {
     const { services } = useOpenSearchDashboards<MapServices>();
 
@@ -205,12 +209,34 @@ export const LayerControlPanel = memo(
       setIsDeleteLayerModalVisible(true);
     };
 
+    const removeDataLayerDataSource = (layer: MapLayerSpecification) => {
+      console.log('removeDataLayerDataSource is called');
+      if (layer.type === DASHBOARDS_MAPS_LAYER_TYPE.DOCUMENTS) {
+        const indexPatternId = layer.source.indexPatternId;
+        const indexPattern = layersIndexPatterns.find((idp) => idp.id === indexPatternId);
+        if (indexPattern) {
+          const indexPatternClone = [...layersIndexPatterns];
+          const index = indexPatternClone.findIndex((idp) => idp.id === indexPatternId);
+          if (index > -1) {
+            indexPatternClone.splice(index, 1);
+            setLayersIndexPatterns(indexPatternClone);
+          }
+          setDataSourceRefIds(
+            indexPatternClone
+              .filter((i) => i.dataSourceRef !== undefined)
+              .map((i) => indexPattern.dataSourceRef!.id)
+          );
+        }
+      }
+    };
+
     const onDeleteLayerConfirm = () => {
       if (selectedDeleteLayer) {
         removeLayers(maplibreRef.current!, selectedDeleteLayer.id, true);
         removeLayer(selectedDeleteLayer.id);
         setIsDeleteLayerModalVisible(false);
         setSelectedDeleteLayer(undefined);
+        removeDataLayerDataSource(selectedDeleteLayer);
       }
     };
 

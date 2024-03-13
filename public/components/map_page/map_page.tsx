@@ -32,6 +32,7 @@ import { MapState } from '../../model/mapState';
 import { GeoShapeFilterMeta, ShapeFilter } from '../../../../../src/plugins/data/common';
 import { buildGeoShapeFilterMeta } from '../../model/geo/filter';
 import { FilterBar } from '../filter_bar/filter_bar';
+import { getDataLayers } from '../../model/layersFunctions';
 
 export interface DashboardProps {
   timeRange?: TimeRange;
@@ -51,13 +52,16 @@ export const MapComponent = ({ mapIdFromSavedObject, dashboardProps }: MapCompon
     savedObjects: { client: savedObjectsClient },
   } = services;
   const [layers, setLayers] = useState<MapLayerSpecification[]>([]);
-  const [savedMapObject, setSavedMapObject] =
-    useState<SimpleSavedObject<MapSavedObjectAttributes> | null>();
+  const [savedMapObject, setSavedMapObject] = useState<SimpleSavedObject<
+    MapSavedObjectAttributes
+  > | null>();
   const [layersIndexPatterns, setLayersIndexPatterns] = useState<IndexPattern[]>([]);
   const maplibreRef = useRef<Maplibre | null>(null);
   const [mapState, setMapState] = useState<MapState>(getInitialMapState());
   const [isUpdatingLayerRender, setIsUpdatingLayerRender] = useState(true);
   const isReadOnlyMode = !!dashboardProps;
+  const [dataSourceRefIds, setDataSourceRefIds] = useState<string[]>([]);
+  const [dataLoadReady, setDataLoadReady] = useState(false);
 
   useEffect(() => {
     if (mapIdFromSavedObject) {
@@ -68,14 +72,20 @@ export const MapComponent = ({ mapIdFromSavedObject, dashboardProps }: MapCompon
         setMapState(savedMapState);
         setLayers(layerList);
         const savedIndexPatterns: IndexPattern[] = [];
+        const remoteDataSourceIds: string[] = [];
         layerList.forEach(async (layer: MapLayerSpecification) => {
           if (layer.type === DASHBOARDS_MAPS_LAYER_TYPE.DOCUMENTS) {
             const indexPatternId = layer.source.indexPatternId;
             const indexPattern = await services.data.indexPatterns.get(indexPatternId);
             savedIndexPatterns.push(indexPattern);
+            if (indexPattern.dataSourceRef) {
+              remoteDataSourceIds.push(indexPattern.dataSourceRef.id);
+            }
           }
         });
         setLayersIndexPatterns(savedIndexPatterns);
+        setDataSourceRefIds(remoteDataSourceIds);
+        setDataLoadReady(true);
       });
     } else {
       const initialDefaultLayer: MapLayerSpecification = getLayerConfigMap()[
@@ -114,18 +124,21 @@ export const MapComponent = ({ mapIdFromSavedObject, dashboardProps }: MapCompon
 
   return (
     <div className="map-page">
-      {isReadOnlyMode ? null : (
-        <MapTopNavMenu
-          mapIdFromUrl={mapIdFromSavedObject}
-          savedMapObject={savedMapObject}
-          layers={layers}
-          layersIndexPatterns={layersIndexPatterns}
-          maplibreRef={maplibreRef}
-          mapState={mapState}
-          setMapState={setMapState}
-          setIsUpdatingLayerRender={setIsUpdatingLayerRender}
-        />
-      )}
+      {isReadOnlyMode
+        ? null
+        : dataLoadReady && (
+            <MapTopNavMenu
+              mapIdFromUrl={mapIdFromSavedObject}
+              savedMapObject={savedMapObject}
+              layers={layers}
+              layersIndexPatterns={layersIndexPatterns}
+              maplibreRef={maplibreRef}
+              mapState={mapState}
+              setMapState={setMapState}
+              setIsUpdatingLayerRender={setIsUpdatingLayerRender}
+              dataSourceRefIds={dataSourceRefIds}
+            />
+          )}
       {!isReadOnlyMode && !!mapState.spatialMetaFilters?.length && (
         <div id="SpatiallFilterGroup" className="globalQueryBar">
           <div className={filterGroupClasses}>
@@ -149,6 +162,8 @@ export const MapComponent = ({ mapIdFromSavedObject, dashboardProps }: MapCompon
         isUpdatingLayerRender={isUpdatingLayerRender}
         setIsUpdatingLayerRender={setIsUpdatingLayerRender}
         addSpatialFilter={addSpatialFilter}
+        dataSourceRefIds={dataSourceRefIds}
+        setDataSourceRefIds={setDataSourceRefIds}
       />
     </div>
   );
