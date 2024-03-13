@@ -9,6 +9,7 @@ import {
   SavedObjectsClient,
   ToastsStart,
   ScopedHistory,
+  MountPoint,
 } from '../../../src/core/public';
 import { NavigationPublicPluginStart } from '../../../src/plugins/navigation/public';
 import { DataPublicPluginSetup, DataPublicPluginStart } from '../../../src/plugins/data/public';
@@ -43,6 +44,7 @@ export interface MapServices extends CoreStart {
   uiSettings: CoreStart['uiSettings'];
   mapConfig: ConfigSchema;
   dataSourceManagement: DataSourceManagementPluginSetup;
+  setActionMenu: (menuMount: MountPoint | undefined) => void;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
