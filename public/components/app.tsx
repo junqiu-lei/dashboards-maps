@@ -12,7 +12,7 @@ import { APP_PATH } from '../../common';
 import { useOpenSearchDashboards } from '../../../../src/plugins/opensearch_dashboards_react/public';
 import { MapServices } from '../types';
 
-export const MapsDashboardsApp = () => {
+export const MapsDashboardsApp = (setHeaderActionMenu: any) => {
   const {
     services: { appBasePath },
   } = useOpenSearchDashboards<MapServices>();
@@ -22,7 +22,11 @@ export const MapsDashboardsApp = () => {
       <I18nProvider>
         <Switch>
           <Route path={[APP_PATH.CREATE_MAP, APP_PATH.EDIT_MAP]} render={() => <MapPage />} />
-          <Route exact path={APP_PATH.LANDING_PAGE_PATH} render={() => <MapsList />} />
+          <Route
+            exact
+            path={APP_PATH.LANDING_PAGE_PATH}
+            render={() => <MapsList setHeaderActionMenu={setHeaderActionMenu} />}
+          />
         </Switch>
       </I18nProvider>
     </Router>
