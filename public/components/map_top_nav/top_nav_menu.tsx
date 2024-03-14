@@ -36,7 +36,7 @@ export const MapTopNavMenu = ({
   maplibreRef,
   mapState,
   setMapState,
-  setIsUpdatingLayerRender,
+  setIsUpdatingLayerRender
 }: MapTopNavMenuProps) => {
   const { services } = useOpenSearchDashboards<MapServices>();
   const {
@@ -48,6 +48,9 @@ export const MapTopNavMenu = ({
     application: { navigateToApp },
     embeddable,
     scopedHistory,
+    dataSourceManagement,
+    savedObjects: { client: savedObjectsClient },
+    notifications,
   } = services;
 
   const [title, setTitle] = useState<string>('');
@@ -132,8 +135,11 @@ export const MapTopNavMenu = ({
     });
   }, [services, mapIdFromUrl, layers, title, description, mapState, originatingApp]);
 
+  const dataSourceManagementEnabled: boolean = !!dataSourceManagement;
+
   return (
     // @ts-ignore
+    <>
     <TopNavMenu
       appName={MAPS_APP_ID}
       config={config}
@@ -154,5 +160,22 @@ export const MapTopNavMenu = ({
       onRefresh={refreshDataLayerRender}
       onRefreshChange={onRefreshChange}
     />
+       {dataSourceManagementEnabled && (
+        // @ts-ignore
+        <dataSourceManagement.ui.DataSourceMenu
+          setMenuMountPoint={setHeaderActionMenu}
+          showDataSourceAggregatedView={true}
+          activeDatasourceIds={['']}
+          savedObjects={savedObjectsClient}
+          notifications={notifications}
+          appName={'mapsPageDataSourceMenu'}
+          hideLocalCluster={false}
+          fullWidth={true}
+          displayAllCompatibleDataSources={true}
+          showTopNavMenuItems={true}
+          config={config}
+        />
+      )}
+    </>
   );
 };

@@ -122,8 +122,6 @@ export const MapComponent = ({ mapIdFromSavedObject, dashboardProps }: MapCompon
     'globalFilterGroup__wrapper-isVisible': !!mapState.spatialMetaFilters?.length,
   });
 
-  const dataSourceManagementEnabled: boolean = !!dataSourceManagement;
-
   console.log(indexPatternIds, 'Print-----indexPatternIds-----MapComponent');
 
   return (
@@ -138,20 +136,7 @@ export const MapComponent = ({ mapIdFromSavedObject, dashboardProps }: MapCompon
           mapState={mapState}
           setMapState={setMapState}
           setIsUpdatingLayerRender={setIsUpdatingLayerRender}
-        />
-      )}
-      {dataSourceManagementEnabled && (
-        // @ts-ignore
-        <dataSourceManagement.ui.DataSourceMenu
-          setMenuMountPoint={setActionMenu}
-          showDataSourceAggregatedView={true}
-          activeDatasourceIds={indexPatternIds}
-          savedObjects={savedObjectsClient}
-          notifications={notifications}
-          appName={'mapsPageDataSourceMenu'}
-          hideLocalCluster={false}
-          fullWidth={true}
-          displayAllCompatibleDataSources={true}
+          dataSourceManagement={dataSourceManagement}
         />
       )}
       {!isReadOnlyMode && !!mapState.spatialMetaFilters?.length && (
