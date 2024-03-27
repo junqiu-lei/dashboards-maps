@@ -26,10 +26,12 @@ import { APP_PATH, MAPS_APP_ID } from '../../../common';
 export const MapsList = () => {
   const {
     services: {
-      notifications: { toasts },
+      notifications,
       savedObjects: { client: savedObjectsClient },
       application: { navigateToApp },
       chrome: { docTitle, setBreadcrumbs },
+      dataSourceManagement,
+      setActionMenu,
     },
   } = useOpenSearchDashboards<MapServices>();
 
@@ -92,14 +94,14 @@ export const MapsList = () => {
       await Promise.all(
         selectedItems.map((item: any) => savedObjectsClient.delete(item.type, item.id))
       ).catch((error) => {
-        toasts.addError(error, {
+        notifications.toasts.addError(error, {
           title: i18n.translate('map.mapListingDeleteErrorTitle', {
             defaultMessage: 'Error deleting map',
           }),
         });
       });
     },
-    [savedObjectsClient, toasts]
+    [savedObjectsClient, notifications.toasts]
   );
 
   const noMapItem = (
@@ -113,7 +115,7 @@ export const MapsList = () => {
       ]}
     />
   );
-
+  const dataSourceManagementEnabled: boolean = !!dataSourceManagement;
   // Render the map list DOM.
   return (
     <I18nProvider>
@@ -121,6 +123,18 @@ export const MapsList = () => {
         <EuiPage restrictWidth="1000px">
           <EuiPageBody component="main" data-test-subj="mapListingPage">
             <EuiPageContentBody>
+              {dataSourceManagementEnabled && (
+                <dataSourceManagement.ui.DataSourceMenu
+                  setMenuMountPoint={setActionMenu}
+                  showDataSourceAggregatedView={true}
+                  savedObjects={savedObjectsClient}
+                  notifications={notifications}
+                  appName={'mapsListDataSourceMenu'}
+                  hideLocalCluster={false}
+                  fullWidth={true}
+                  displayAllCompatibleDataSources={true}
+                />
+              )}
               <TableListView
                 headingId="mapsListingHeading"
                 createItem={navigateToCreateMapPage}
@@ -140,7 +154,7 @@ export const MapsList = () => {
                 tableListTitle={i18n.translate('maps.listing.table.listTitle', {
                   defaultMessage: 'Maps',
                 })}
-                toastNotifications={toasts}
+                toastNotifications={notifications.toasts}
               />
             </EuiPageContentBody>
           </EuiPageBody>

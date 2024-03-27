@@ -26,6 +26,7 @@ interface MapTopNavMenuProps {
   setMapState: (mapState: MapState) => void;
   originatingApp?: string;
   setIsUpdatingLayerRender: (isUpdatingLayerRender: boolean) => void;
+  dataSourceRefIds: string[];
 }
 
 export const MapTopNavMenu = ({
@@ -37,6 +38,7 @@ export const MapTopNavMenu = ({
   mapState,
   setMapState,
   setIsUpdatingLayerRender,
+  dataSourceRefIds,
 }: MapTopNavMenuProps) => {
   const { services } = useOpenSearchDashboards<MapServices>();
   const {
@@ -48,6 +50,9 @@ export const MapTopNavMenu = ({
     application: { navigateToApp },
     embeddable,
     scopedHistory,
+    dataSourceManagement,
+    savedObjects: { client: savedObjectsClient },
+    notifications,
   } = services;
 
   const [title, setTitle] = useState<string>('');
@@ -132,27 +137,84 @@ export const MapTopNavMenu = ({
     });
   }, [services, mapIdFromUrl, layers, title, description, mapState, originatingApp]);
 
+  const dataSourceManagementEnabled: boolean = !!dataSourceManagement;
+  // const remoteDataSourceIds: (string | undefined)[] = Array.from(
+  //   new Set(layersIndexPatterns.map((indexPattern) => indexPattern.dataSourceRef?.id))
+  // );
+
+  // useEffect(() => {
+  //   console.log(layersIndexPatterns, 'Print-----layersIndexPatterns-----');
+  //   console.log(layersIndexPatterns.length, 'Print-----layersIndexPatterns.length-----');
+  //   const remoteDataSourceIds: string[] = layersIndexPatterns
+  //     .filter((indexPattern) => indexPattern.dataSourceRef !== undefined)
+  //     .map((indexPattern) => indexPattern.dataSourceRef!.id);
+  //   console.log(remoteDataSourceIds, 'Print-----remoteDataSourceIds-----');
+  //   setDataSourceRefIds(remoteDataSourceIds);
+  // }, [layersIndexPatterns]);
+  //
+  // const dataSourceRefIds1: string[] = layersIndexPatterns
+  //   .filter((indexPattern) => indexPattern.dataSourceRef !== undefined)
+  //   .map((indexPattern) => indexPattern.dataSourceRef!.id);
+  //
+  // console.log(
+  //   layersIndexPatterns.length,
+  //   'Print-----layersIndexPatterns.length-out-of-effect-----MapTopNavMenu'
+  // );
+  // console.log(layersIndexPatterns, 'Print-----layersIndexPatterns--out-of-effect---MapTopNavMenu');
+  // console.log(dataSourceRefIds1, 'Print-----dataSourceRefIds1--out-of-effect---MapTopNavMenu');
+
+  // const remoteDataSourceIds: string[] = layersIndexPatterns.map(
+  //   (indexPattern) => indexPattern.dataSourceRef!.id
+  // );
+  // console.log(remoteDataSourceIds, 'remoteDataSourceIds');
+
+  // for (const indexPattern of layersIndexPatterns) {
+  //   console.log(indexPattern, 'indexPattern');
+  //   console.log(indexPattern.dataSourceRef, 'indexPattern.dataSourceRef');
+  //   console.log(indexPattern.dataSourceRef?.id, 'indexPattern.dataSourceRef?.id');
+  // }
+
+  console.log(dataSourceRefIds, 'Print-----dataSourceRefIds-----MapTopNavMenu');
+
   return (
     // @ts-ignore
-    <TopNavMenu
-      appName={MAPS_APP_ID}
-      config={config}
-      setMenuMountPoint={setHeaderActionMenu}
-      indexPatterns={layersIndexPatterns || []}
-      showSearchBar={true}
-      showFilterBar={false}
-      showDatePicker={true}
-      showQueryBar={true}
-      showSaveQuery={true}
-      showQueryInput={true}
-      onQuerySubmit={handleQuerySubmit}
-      dateRangeFrom={dateFrom}
-      dateRangeTo={dateTo}
-      query={queryConfig}
-      isRefreshPaused={isRefreshPaused}
-      refreshInterval={refreshIntervalValue}
-      onRefresh={refreshDataLayerRender}
-      onRefreshChange={onRefreshChange}
-    />
+    <>
+      <TopNavMenu
+        appName={MAPS_APP_ID}
+        config={config}
+        setMenuMountPoint={setHeaderActionMenu}
+        indexPatterns={layersIndexPatterns || []}
+        showSearchBar={true}
+        showFilterBar={false}
+        showDatePicker={true}
+        showQueryBar={true}
+        showSaveQuery={true}
+        showQueryInput={true}
+        onQuerySubmit={handleQuerySubmit}
+        dateRangeFrom={dateFrom}
+        dateRangeTo={dateTo}
+        query={queryConfig}
+        isRefreshPaused={isRefreshPaused}
+        refreshInterval={refreshIntervalValue}
+        onRefresh={refreshDataLayerRender}
+        onRefreshChange={onRefreshChange}
+      />
+      {dataSourceManagementEnabled && (
+        // @ts-ignore
+        <dataSourceManagement.ui.DataSourceMenu
+          setMenuMountPoint={setHeaderActionMenu}
+          showDataSourceAggregatedView={true}
+          activeDatasourceIds={dataSourceRefIds}
+          savedObjects={savedObjectsClient}
+          notifications={notifications}
+          appName={'mapsPageDataSourceMenu'}
+          hideLocalCluster={false}
+          fullWidth={true}
+          displayAllCompatibleDataSources={false}
+          showTopNavMenuItems={true}
+          config={config}
+        />
+      )}
+    </>
   );
 };

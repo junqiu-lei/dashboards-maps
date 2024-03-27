@@ -32,6 +32,7 @@ import { MapState } from '../../model/mapState';
 import { GeoShapeFilterMeta, ShapeFilter } from '../../../../../src/plugins/data/common';
 import { buildGeoShapeFilterMeta } from '../../model/geo/filter';
 import { FilterBar } from '../filter_bar/filter_bar';
+import { getDataLayers } from '../../model/layersFunctions';
 
 export interface DashboardProps {
   timeRange?: TimeRange;
@@ -51,13 +52,15 @@ export const MapComponent = ({ mapIdFromSavedObject, dashboardProps }: MapCompon
     savedObjects: { client: savedObjectsClient },
   } = services;
   const [layers, setLayers] = useState<MapLayerSpecification[]>([]);
-  const [savedMapObject, setSavedMapObject] =
-    useState<SimpleSavedObject<MapSavedObjectAttributes> | null>();
+  const [savedMapObject, setSavedMapObject] = useState<SimpleSavedObject<
+    MapSavedObjectAttributes
+  > | null>();
   const [layersIndexPatterns, setLayersIndexPatterns] = useState<IndexPattern[]>([]);
   const maplibreRef = useRef<Maplibre | null>(null);
   const [mapState, setMapState] = useState<MapState>(getInitialMapState());
   const [isUpdatingLayerRender, setIsUpdatingLayerRender] = useState(true);
   const isReadOnlyMode = !!dashboardProps;
+  const [dataSourceRefIds, setDataSourceRefIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (mapIdFromSavedObject) {
@@ -68,14 +71,20 @@ export const MapComponent = ({ mapIdFromSavedObject, dashboardProps }: MapCompon
         setMapState(savedMapState);
         setLayers(layerList);
         const savedIndexPatterns: IndexPattern[] = [];
+        const remoteDataSourceIds: string[] = [];
         layerList.forEach(async (layer: MapLayerSpecification) => {
           if (layer.type === DASHBOARDS_MAPS_LAYER_TYPE.DOCUMENTS) {
             const indexPatternId = layer.source.indexPatternId;
             const indexPattern = await services.data.indexPatterns.get(indexPatternId);
             savedIndexPatterns.push(indexPattern);
+            if (indexPattern.dataSourceRef) {
+              remoteDataSourceIds.push(indexPattern.dataSourceRef.id);
+            }
           }
         });
+        console.log(remoteDataSourceIds, 'Print-----remoteDataSourceIds-----');
         setLayersIndexPatterns(savedIndexPatterns);
+        setDataSourceRefIds(remoteDataSourceIds);
       });
     } else {
       const initialDefaultLayer: MapLayerSpecification = getLayerConfigMap()[
@@ -86,6 +95,42 @@ export const MapComponent = ({ mapIdFromSavedObject, dashboardProps }: MapCompon
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // useEffect(() => {
+  //   const remoteDataSourceIds: string[] = [];
+  //   console.log(layersIndexPatterns, 'xxxPrint--useEffect---layersIndexPatterns-----');
+  //   // layersIndexPatterns.forEach((indexPattern: IndexPattern) => {
+  //   //   console.log('should print', indexPattern);
+  //   //   console.log(layersIndexPatterns, 'Print-----layersIndexPatterns-----');
+  //   //   if (indexPattern.dataSourceRef) {
+  //   //     remoteDataSourceIds.push(indexPattern.dataSourceRef.id);
+  //   //   } else {
+  //   //     remoteDataSourceIds.push('');
+  //   //   }
+  //   // });
+  //   console.log(layersIndexPatterns.length, 'Print-----layersIndexPatterns.length-----');
+  //   // for (let i = 0; i < layersIndexPatterns.length; i++) {
+  //   //   console.log('should print', layersIndexPatterns[i]);
+  //   //   if (layersIndexPatterns[i].dataSourceRef) {
+  //   //     remoteDataSourceIds.push(layersIndexPatterns[i].dataSourceRef.id);
+  //   //   } else {
+  //   //     remoteDataSourceIds.push('');
+  //   //   }
+  //   // }
+  //   // layersIndexPatterns.map((indexPattern) => console.log(indexPattern.dataSourceRef?.id));
+  //
+  //   for await (const indexPattern of layersIndexPatterns) {
+  //     console.log('should print', indexPattern);
+  //     if (indexPattern.dataSourceRef) {
+  //       remoteDataSourceIds.push(indexPattern.dataSourceRef.id);
+  //     } else {
+  //       remoteDataSourceIds.push('');
+  //     }
+  //   }
+  //
+  //   setDataSourceRefIds(remoteDataSourceIds);
+  //   console.log(remoteDataSourceIds, 'useEffect remoteDataSourceIds');
+  // }, [layersIndexPatterns]);
 
   const addSpatialFilter = (
     shape: ShapeFilter,
@@ -124,6 +169,7 @@ export const MapComponent = ({ mapIdFromSavedObject, dashboardProps }: MapCompon
           mapState={mapState}
           setMapState={setMapState}
           setIsUpdatingLayerRender={setIsUpdatingLayerRender}
+          dataSourceRefIds={dataSourceRefIds}
         />
       )}
       {!isReadOnlyMode && !!mapState.spatialMetaFilters?.length && (
@@ -149,6 +195,8 @@ export const MapComponent = ({ mapIdFromSavedObject, dashboardProps }: MapCompon
         isUpdatingLayerRender={isUpdatingLayerRender}
         setIsUpdatingLayerRender={setIsUpdatingLayerRender}
         addSpatialFilter={addSpatialFilter}
+        dataSourceRefIds={dataSourceRefIds}
+        setDataSourceRefIds={setDataSourceRefIds}
       />
     </div>
   );
