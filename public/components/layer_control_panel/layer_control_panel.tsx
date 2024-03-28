@@ -210,7 +210,6 @@ export const LayerControlPanel = memo(
     };
 
     const removeDataLayerDataSource = (layer: MapLayerSpecification) => {
-      console.log('removeDataLayerDataSource is called');
       if (layer.type === DASHBOARDS_MAPS_LAYER_TYPE.DOCUMENTS) {
         const indexPatternId = layer.source.indexPatternId;
         const indexPattern = layersIndexPatterns.find((idp) => idp.id === indexPatternId);
@@ -221,11 +220,23 @@ export const LayerControlPanel = memo(
             indexPatternClone.splice(index, 1);
             setLayersIndexPatterns(indexPatternClone);
           }
-          setDataSourceRefIds(
-            indexPatternClone
-              .filter((i) => i.dataSourceRef !== undefined)
-              .map((i) => indexPattern.dataSourceRef!.id)
-          );
+          // remove duplicate dataSourceRefIds
+          const updatedDataSourceRefIds = [];
+          indexPatternClone.forEach((ip) => {
+            if (ip.dataSourceRef && !updatedDataSourceRefIds.includes(ip.dataSourceRef.id)) {
+              updatedDataSourceRefIds.push(ip.dataSourceRef.id);
+            } else if (!ip.dataSourceRef && !updatedDataSourceRefIds.includes('')) {
+              updatedDataSourceRefIds.push('');
+            }
+          });
+
+          setDataSourceRefIds(updatedDataSourceRefIds);
+
+          // setDataSourceRefIds(
+          //   indexPatternClone
+          //     // .filter((i) => i.dataSourceRef !== undefined)
+          //     .map((i) => indexPattern.dataSourceRef!.id)
+          // );
         }
       }
     };

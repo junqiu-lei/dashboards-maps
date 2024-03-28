@@ -73,19 +73,47 @@ export const MapComponent = ({ mapIdFromSavedObject, dashboardProps }: MapCompon
         setLayers(layerList);
         const savedIndexPatterns: IndexPattern[] = [];
         const remoteDataSourceIds: string[] = [];
-        layerList.forEach(async (layer: MapLayerSpecification) => {
-          if (layer.type === DASHBOARDS_MAPS_LAYER_TYPE.DOCUMENTS) {
-            const indexPatternId = layer.source.indexPatternId;
-            const indexPattern = await services.data.indexPatterns.get(indexPatternId);
-            savedIndexPatterns.push(indexPattern);
-            if (indexPattern.dataSourceRef) {
-              remoteDataSourceIds.push(indexPattern.dataSourceRef.id);
+
+        const fetchDs = async () => {
+          const requests = layerList
+            .filter((layer) => layer.type === DASHBOARDS_MAPS_LAYER_TYPE.DOCUMENTS)
+            .map((layer) => services.data.indexPatterns.get(layer.source.indexPatternId));
+          const resp = await Promise.all(requests);
+          console.log('Resp', resp);
+          resp.forEach((response) => {
+            savedIndexPatterns.push(response);
+            // avoid duplicate dataSourceRefIds
+            if (response.dataSourceRef && !dataSourceRefIds.includes(response.dataSourceRef.id)) {
+              remoteDataSourceIds.push(response.dataSourceRef.id);
+            } else if (!response.dataSourceRef && !remoteDataSourceIds.includes('')) {
+              remoteDataSourceIds.push('');
             }
-          }
-        });
-        setLayersIndexPatterns(savedIndexPatterns);
-        setDataSourceRefIds(remoteDataSourceIds);
-        setDataLoadReady(true);
+          });
+
+          console.log(remoteDataSourceIds, 'Print-----remoteDataSourceIds-----');
+          setLayers(layerList);
+          setLayersIndexPatterns(savedIndexPatterns);
+          console.log('when did', remoteDataSourceIds.length);
+          setDataSourceRefIds(remoteDataSourceIds);
+          setDataLoadReady(true);
+        };
+
+        fetchDs();
+        // layerList.forEach(async (layer: MapLayerSpecification) => {
+        //   if (layer.type === DASHBOARDS_MAPS_LAYER_TYPE.DOCUMENTS) {
+        //     const indexPatternId = layer.source.indexPatternId;
+        //     const indexPattern = await services.data.indexPatterns.get(indexPatternId);
+        //     savedIndexPatterns.push(indexPattern);
+        //     if (indexPattern.dataSourceRef) {
+        //       remoteDataSourceIds.push(indexPattern.dataSourceRef.id);
+        //     } else {
+        //       remoteDataSourceIds.push('');
+        //     }
+        //   }
+        // });
+        // setLayersIndexPatterns(savedIndexPatterns);
+        // setDataSourceRefIds(remoteDataSourceIds);
+        // setDataLoadReady(true);
       });
     } else {
       const initialDefaultLayer: MapLayerSpecification = getLayerConfigMap()[
@@ -93,6 +121,7 @@ export const MapComponent = ({ mapIdFromSavedObject, dashboardProps }: MapCompon
       ] as MapLayerSpecification;
       initialDefaultLayer.name = MAP_LAYER_DEFAULT_NAME;
       setLayers([initialDefaultLayer]);
+      setDataLoadReady(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -121,6 +150,8 @@ export const MapComponent = ({ mapIdFromSavedObject, dashboardProps }: MapCompon
     // eslint-disable-next-line @typescript-eslint/naming-convention
     'globalFilterGroup__wrapper-isVisible': !!mapState.spatialMetaFilters?.length,
   });
+
+  console.log(dataLoadReady, 'Print-----dataLoadReady-----MapComponent');
 
   return (
     <div className="map-page">

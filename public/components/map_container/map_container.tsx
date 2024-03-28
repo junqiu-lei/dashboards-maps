@@ -248,11 +248,20 @@ export const MapContainer = ({
       );
       const cloneLayersIndexPatterns = [...layersIndexPatterns, newIndexPattern];
       setLayersIndexPatterns(cloneLayersIndexPatterns);
-      setDataSourceRefIds(
-        cloneLayersIndexPatterns
-          .filter((indexPattern) => indexPattern.dataSourceRef !== undefined)
-          .map((indexPattern) => indexPattern.dataSourceRef!.id)
-      );
+      // setDataSourceRefIds(
+      //   cloneLayersIndexPatterns
+      //     .filter((indexPattern) => indexPattern.dataSourceRef !== undefined)
+      //     .map((indexPattern) => indexPattern.dataSourceRef!.id)
+      // );
+      const updatedDataSourceRefIds: string[] = [];
+      cloneLayersIndexPatterns.forEach((ip) => {
+        if (ip.dataSourceRef && !updatedDataSourceRefIds.includes(ip.dataSourceRef.id)) {
+          updatedDataSourceRefIds.push(ip.dataSourceRef.id);
+        } else if (!ip.dataSourceRef && !updatedDataSourceRefIds.includes('')) {
+          updatedDataSourceRefIds.push('');
+        }
+      });
+      setDataSourceRefIds(updatedDataSourceRefIds);
     }
   };
 

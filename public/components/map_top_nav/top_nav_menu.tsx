@@ -138,7 +138,6 @@ export const MapTopNavMenu = ({
   }, [services, mapIdFromUrl, layers, title, description, mapState, originatingApp]);
 
   const dataSourceManagementEnabled: boolean = !!dataSourceManagement;
-
   console.log(dataSourceRefIds, 'Print-----dataSourceRefIds-----MapTopNavMenu');
 
   return (
@@ -163,23 +162,18 @@ export const MapTopNavMenu = ({
         refreshInterval={refreshIntervalValue}
         onRefresh={refreshDataLayerRender}
         onRefreshChange={onRefreshChange}
+        showDataSourceMenu={dataSourceManagementEnabled}
+        dataSourceMenuConfig={{
+          componentType: 'DataSourceAggregatedView',
+          componentConfig: {
+            activeDataSourceIds: dataSourceRefIds,
+            savedObjects: savedObjectsClient,
+            notifications,
+            fullWidth: true,
+            displayAllCompatibleDataSources: false,
+          },
+        }}
       />
-      {dataSourceManagementEnabled && (
-        // @ts-ignore
-        <dataSourceManagement.ui.DataSourceMenu
-          setMenuMountPoint={setHeaderActionMenu}
-          showDataSourceAggregatedView={true}
-          activeDatasourceIds={dataSourceRefIds}
-          savedObjects={savedObjectsClient}
-          notifications={notifications}
-          appName={'mapsPageDataSourceMenu'}
-          hideLocalCluster={false}
-          fullWidth={true}
-          displayAllCompatibleDataSources={false}
-          showTopNavMenuItems={true}
-          config={config}
-        />
-      )}
     </>
   );
 };

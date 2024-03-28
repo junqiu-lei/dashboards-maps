@@ -22,6 +22,7 @@ import { MapSavedObjectAttributes } from '../../../common/map_saved_object_attri
 import { MapServices } from '../../types';
 import { getMapsLandingBreadcrumbs } from '../../utils/breadcrumbs';
 import { APP_PATH, MAPS_APP_ID } from '../../../common';
+import { DataSourceAggregatedViewConfig } from '../../../../../src/plugins/data_source_management/public';
 
 export const MapsList = () => {
   const {
@@ -117,6 +118,9 @@ export const MapsList = () => {
   );
   const dataSourceManagementEnabled: boolean = !!dataSourceManagement;
   // Render the map list DOM.
+  const DataSourcesMenu = dataSourceManagement.ui.getDataSourceMenu<
+    DataSourceAggregatedViewConfig
+  >();
   return (
     <I18nProvider>
       <>
@@ -124,15 +128,15 @@ export const MapsList = () => {
           <EuiPageBody component="main" data-test-subj="mapListingPage">
             <EuiPageContentBody>
               {dataSourceManagementEnabled && (
-                <dataSourceManagement.ui.DataSourceMenu
+                <DataSourcesMenu
                   setMenuMountPoint={setActionMenu}
-                  showDataSourceAggregatedView={true}
-                  savedObjects={savedObjectsClient}
-                  notifications={notifications}
-                  appName={'mapsListDataSourceMenu'}
-                  hideLocalCluster={false}
-                  fullWidth={true}
-                  displayAllCompatibleDataSources={true}
+                  componentType={'DataSourceAggregatedView'}
+                  componentConfig={{
+                    savedObjects: savedObjectsClient,
+                    notifications,
+                    fullWidth: true,
+                    displayAllCompatibleDataSources: true,
+                  }}
                 />
               )}
               <TableListView
