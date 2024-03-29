@@ -155,7 +155,7 @@ jobs:
         uses: cypress-io/github-action@v5
         with:
           working-directory: OpenSearch-Dashboards/plugins/dashboards-maps
-          command: yarn run cypress run --browser electron
+          command: yarn run cypress run --browser chrome
           wait-on: 'http://localhost:5601'
           wait-on-timeout: 300
         env:
