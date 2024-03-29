@@ -9,11 +9,23 @@ export default class GeospatialService {
   }
 
   uploadGeojson = async (context, req, res) => {
+    // console.log(req, 'Print-----req-----uploadGeojson');
+    const dataSourceRefId = req.query.dataSourceId;
+    let uploadResponse;
     try {
-      const { callAsCurrentUser } = await this.driver.asScoped(req);
-      const uploadResponse = await callAsCurrentUser('geospatial.geospatialQuery', {
-        body: req.body,
-      });
+      if (dataSourceRefId) {
+        const apicaller = context.dataSource.opensearch.legacy.getClient(dataSourceRefId).callAPI;
+        uploadResponse = await apicaller('geospatial.geospatialQuery', {
+          body: req.body,
+        });
+        console.log(uploadResponse, 'Print-----uploadResponse-----uploadGeojson');
+      } else {
+        const { callAsCurrentUser } = await this.driver.asScoped(req);
+        uploadResponse = await callAsCurrentUser('geospatial.geospatialQuery', {
+          body: req.body,
+        });
+      }
+
       return res.ok({
         body: {
           ok: true,

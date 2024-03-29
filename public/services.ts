@@ -7,10 +7,15 @@ import { CoreStart } from '../../../src/core/public';
 import { createGetterSetter } from '../../../src/plugins/opensearch_dashboards_utils/common';
 import { TimefilterContract } from '../../../src/plugins/data/public';
 
-export const postGeojson = async (requestBody: any, http: CoreStart['http']) => {
+export const postGeojson = async (
+  requestBody: any,
+  http: CoreStart['http'],
+  dataSourceRefId: string
+) => {
   try {
     const response = await http.post('../api/custom_import_map/_upload', {
       body: requestBody,
+      query: dataSourceRefId ? { dataSourceId: dataSourceRefId } : {},
     });
     return response;
   } catch (e) {
@@ -18,12 +23,19 @@ export const postGeojson = async (requestBody: any, http: CoreStart['http']) => 
   }
 };
 
-export const getIndex = async (indexName: string, http: CoreStart['http']) => {
+export const getIndex = async (
+  indexName: string,
+  http: CoreStart['http'],
+  dataSourceRefId: string
+) => {
   try {
     const response = await http.post('../api/custom_import_map/_indices', {
       body: JSON.stringify({
         index: indexName,
       }),
+      query: {
+        dataSourceId: dataSourceRefId,
+      },
     });
     return response;
   } catch (e) {

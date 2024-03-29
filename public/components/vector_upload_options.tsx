@@ -4,7 +4,7 @@
  */
 
 import './vector_upload_options.scss';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import path from 'path';
 import {
   EuiButton,
@@ -31,6 +31,8 @@ import {
   useOpenSearchDashboards,
 } from '../../../../src/plugins/opensearch_dashboards_react/public';
 import { RegionMapOptionsProps } from '../../../../src/plugins/region_map/public';
+import { MapServices } from '../types';
+import { IndexPattern } from '../../../../src/plugins/data/common';
 
 const VectorUploadOptions = (props: RegionMapOptionsProps) => {
   const opensearchDashboards = useOpenSearchDashboards();
@@ -49,6 +51,8 @@ const VectorUploadOptions = (props: RegionMapOptionsProps) => {
   const [value, setValue] = useState('');
   const [isLoading, setLoading] = useState(false);
   const [fileContent, setFileContent] = useState();
+  const [dataSourceRefId, setDataSourceRefId] = useState<string>('');
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   const onTextChange = (e) => {
     setValue(e.target.value);
@@ -77,6 +81,19 @@ const VectorUploadOptions = (props: RegionMapOptionsProps) => {
   const fetchElementByName = (elementName: string) => {
     return document.getElementsByName(elementName)[0];
   };
+
+  const { services } = useOpenSearchDashboards<MapServices>();
+
+  useEffect(() => {
+    const indexPatternId = new URLSearchParams(window.location.href).get('indexPattern');
+    let indexPattern: IndexPattern | null = null;
+    const loadIndexPattern = async () => {
+      indexPattern = await services.data.indexPatterns.get(indexPatternId);
+      setDataSourceRefId(indexPattern?.dataSourceRef?.id || '');
+      setIsDataLoaded(true);
+    };
+    loadIndexPattern();
+  }, []);
 
   const validateIndexName = (typedIndexName: string, isIndexNameWithSuffix: boolean) => {
     const error = [];
@@ -164,7 +181,7 @@ const VectorUploadOptions = (props: RegionMapOptionsProps) => {
     if (isValidIndexName) {
       if (files && validateGeojsonFileFormat(files) && validateFileSize(files)) {
         fileData = await getFileData(files);
-        await handleUploadGeojson(newIndexName, fileData);
+        await handleUploadGeojson(newIndexName, fileData, dataSourceRefId);
       }
     }
 
@@ -175,7 +192,7 @@ const VectorUploadOptions = (props: RegionMapOptionsProps) => {
 
   const checkIfIndexExists = async (indexName: string) => {
     try {
-      const result = await getIndex(indexName, http);
+      const result = await getIndex(indexName, http, dataSourceRefId);
       return result.ok;
     } catch (e) {
       return false;
@@ -280,7 +297,7 @@ const VectorUploadOptions = (props: RegionMapOptionsProps) => {
       type: GEO_SHAPE_TYPE,
       data: [JSON.parse(fileData || null)],
     };
-    const result = await postGeojson(JSON.stringify(bodyData), http);
+    const result = await postGeojson(JSON.stringify(bodyData), http, dataSourceRefId);
     // error handling logic that displays correct toasts for the end users
     if (result?.ok) {
       parsePostGeojsonResult(result, indexName);
@@ -298,10 +315,10 @@ const VectorUploadOptions = (props: RegionMapOptionsProps) => {
   };
 
   const handleUploadGeojson = async (indexName: string, fileData: object) => {
-    const indexExists = await checkIfIndexExists(indexName);
+    const indexExists = await checkIfIndexExists(indexName, dataSourceRefId);
 
     if (!indexExists) {
-      await uploadGeojson(indexName, fileData);
+      await uploadGeojson(indexName, fileData, dataSourceRefId);
     } else {
       notifications.toasts.addWarning('Map name ' + indexName + ' already exists.');
     }
@@ -312,96 +329,98 @@ const VectorUploadOptions = (props: RegionMapOptionsProps) => {
   };
 
   return (
-    <div id="uploadCustomVectorMap">
-      <EuiCard textAlign="left" title="" description="" aria-label="import-vector-map-card">
-        <EuiSpacer size="s" aria-label="medium-spacer" />
+    isDataLoaded && (
+      <div id="uploadCustomVectorMap">
+        <EuiCard textAlign="left" title="" description="" aria-label="import-vector-map-card">
+          <EuiSpacer size="s" aria-label="medium-spacer" />
 
-        <EuiText size="s" aria-label="upload-map-text">
-          Upload map
-        </EuiText>
-        <EuiSpacer size="m" aria-label="medium-spacer" />
+          <EuiText size="s" aria-label="upload-map-text">
+            Upload map
+          </EuiText>
+          <EuiSpacer size="m" aria-label="medium-spacer" />
 
-        <EuiFormRow aria-label="form-row-for-file-picker">
-          <EuiFilePicker
-            id="filePicker"
-            data-testid="filePicker"
-            data-test-subj="filePicker"
-            initialPromptText="Select or drag and drop a json file"
-            onChange={(files) => {
-              onChange(files);
-            }}
-            display="large"
-            accept=".json,.geojson"
+          <EuiFormRow aria-label="form-row-for-file-picker">
+            <EuiFilePicker
+              id="filePicker"
+              data-testid="filePicker"
+              data-test-subj="filePicker"
+              initialPromptText="Select or drag and drop a json file"
+              onChange={(files) => {
+                onChange(files);
+              }}
+              display="large"
+              accept=".json,.geojson"
+              required={true}
+              aria-label="geojson-file-picker"
+            />
+          </EuiFormRow>
+          <EuiSpacer size="m" aria-label="medium-spacer" />
+
+          <EuiText size="xs" color="subdued" aria-label="geojson-file-format-text">
+            <p>
+              <span className="formattedSpan">Formats accepted: .json, .geojson</span>
+              <span className="formattedSpan">Max size: 25 MB</span>
+              <span className="formattedSpan">
+                Coordinates must be in EPSG:4326 coordinate reference system.
+              </span>
+            </p>
+          </EuiText>
+          <EuiSpacer size="m" aria-label="medium-spacer" />
+
+          <EuiText size="s" aria-label="map-name-prefix-text">
+            Map name prefix
+          </EuiText>
+          <EuiSpacer size="m" aria-label="medium-spacer" />
+
+          <EuiFieldText
+            data-testid="customIndex"
+            data-test-subj="customIndex"
+            tabIndex="0"
+            placeholder="Enter a valid map name prefix"
+            value={value}
+            onChange={(e) => onTextChange(e)}
+            onBlur={(e) => validateIndexName(e?.target?.value, false)}
+            id="customIndex"
+            name="customIndex"
             required={true}
-            aria-label="geojson-file-picker"
+            label="Map name"
+            aria-label="map-name-text-field"
           />
-        </EuiFormRow>
-        <EuiSpacer size="m" aria-label="medium-spacer" />
+          <EuiSpacer size="m" aria-label="medium-spacer" />
 
-        <EuiText size="xs" color="subdued" aria-label="geojson-file-format-text">
-          <p>
-            <span className="formattedSpan">Formats accepted: .json, .geojson</span>
-            <span className="formattedSpan">Max size: 25 MB</span>
-            <span className="formattedSpan">
-              Coordinates must be in EPSG:4326 coordinate reference system.
-            </span>
-          </p>
-        </EuiText>
-        <EuiSpacer size="m" aria-label="medium-spacer" />
+          <EuiText size="xs" color="subdued" aria-label="map-name-guidelines-text">
+            Map name guidleines:
+            <ul>
+              <li> Map name prefix must contain 1-250 characters.</li>
+              <li> Map name prefix must start with a-z.</li>
+              <li> Valid characters are a-z, 0-9, - and _ .</li>
+              <li>
+                The final map name will be the entered prefix here followed by -map as the suffix.
+              </li>
+            </ul>
+          </EuiText>
+          <EuiText size="xs" aria-label="map-name-error-text">
+            <EuiTextColor color="danger" aria-label="map-name-error-text-color">
+              <p name="errorIndexName" />
+            </EuiTextColor>
+          </EuiText>
+          <EuiSpacer size="m" aria-label="medium-spacer" />
 
-        <EuiText size="s" aria-label="map-name-prefix-text">
-          Map name prefix
-        </EuiText>
-        <EuiSpacer size="m" aria-label="medium-spacer" />
-
-        <EuiFieldText
-          data-testid="customIndex"
-          data-test-subj="customIndex"
-          tabIndex="0"
-          placeholder="Enter a valid map name prefix"
-          value={value}
-          onChange={(e) => onTextChange(e)}
-          onBlur={(e) => validateIndexName(e?.target?.value, false)}
-          id="customIndex"
-          name="customIndex"
-          required={true}
-          label="Map name"
-          aria-label="map-name-text-field"
-        />
-        <EuiSpacer size="m" aria-label="medium-spacer" />
-
-        <EuiText size="xs" color="subdued" aria-label="map-name-guidelines-text">
-          Map name guidleines:
-          <ul>
-            <li> Map name prefix must contain 1-250 characters.</li>
-            <li> Map name prefix must start with a-z.</li>
-            <li> Valid characters are a-z, 0-9, - and _ .</li>
-            <li>
-              The final map name will be the entered prefix here followed by -map as the suffix.
-            </li>
-          </ul>
-        </EuiText>
-        <EuiText size="xs" aria-label="map-name-error-text">
-          <EuiTextColor color="danger" aria-label="map-name-error-text-color">
-            <p name="errorIndexName" />
-          </EuiTextColor>
-        </EuiText>
-        <EuiSpacer size="m" aria-label="medium-spacer" />
-
-        <div className="importFileButton">
-          <EuiButton
-            id="submitButton"
-            type="button"
-            fill
-            onClick={handleSubmit}
-            isLoading={isLoading}
-            aria-label="import-file-button"
-          >
-            Import file
-          </EuiButton>
-        </div>
-      </EuiCard>
-    </div>
+          <div className="importFileButton">
+            <EuiButton
+              id="submitButton"
+              type="button"
+              fill
+              onClick={handleSubmit}
+              isLoading={isLoading}
+              aria-label="import-file-button"
+            >
+              Import file
+            </EuiButton>
+          </div>
+        </EuiCard>
+      </div>
+    )
   );
 };
 

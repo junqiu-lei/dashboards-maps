@@ -13,6 +13,9 @@ export default function (services, router) {
       path: '/api/custom_import_map/_upload',
       validate: {
         body: schema.any(),
+        query: schema.object({
+          dataSourceId: schema.string(),
+        }),
       },
       options: {
         body: {

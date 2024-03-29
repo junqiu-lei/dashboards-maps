@@ -14,6 +14,9 @@ export default function (services, router) {
         body: schema.object({
           index: schema.string(),
         }),
+        query: schema.object({
+          dataSourceId: schema.string(),
+        }),
       },
     },
     services.getIndex
