@@ -15,13 +15,10 @@ env:
 jobs:
   tests:
     env:
-      # prevents extra Cypress installation progress messages
       CI: 1
-      # avoid warnings like "tput: No value for $TERM and no -T specified"
       TERM: xterm
       WORKING_DIR: ${{ matrix.working_directory }}.
     strategy:
-      # This setting says that all jobs should finish, even if one fails
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
@@ -41,8 +38,6 @@ jobs:
         with:
           java-version: 11
 
-      # This is a hack, but this step creates a link to the X: mounted drive, which makes the path
-      # short enough to work on Windows
       - name: Shorten Path
         if: ${{ matrix.os == 'windows-latest' }}
         run: subst 'X:' .
@@ -83,7 +78,6 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install Yarn
-        # Need to use bash to avoid having a windows/linux specific step
         shell: bash
         run: |
           YARN_VERSION=$(node -p "require('./OpenSearch-Dashboards/package.json').engines.yarn")
@@ -96,7 +90,6 @@ jobs:
       - name: Set npm to use bash for shell
         if: ${{ matrix.os == 'windows-latest' }}
         run: |
-          # Sets Windows to use bash for npm shell so the script commands work as intended
           npm config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"
 
       - name: Move plugin to OpenSearch-Dashboards Plugins Directory
@@ -124,51 +117,41 @@ jobs:
         run: sleep 600
         shell: bash
 
-      - name: Install Cypress
+      - name: Install Cypress 9.5.4
         run: |
           cd OpenSearch-Dashboards/plugins/dashboards-maps
-          # This will install Cypress in case the binary is missing which can happen on Windows
-          # If the binary exists, this will exit quickly so it should not be an expensive operation
-          npx cypress install
+          yarn add cypress@9.5.4 --dev
+          npx cypress install --version 9.5.4
         shell: bash
-
-      - name: Get Cypress version
-        id: cypress_version
-        run: |
-          cd OpenSearch-Dashboards/plugins/dashboards-maps
-          echo "::set-output name=cypress_version::$(cat ./package.json | jq '.dependencies.cypress' | tr -d '"')"
 
       - name: Cache Cypress
         id: cache-cypress
         uses: actions/cache@v2
         with:
           path: ${{ matrix.cypress_cache_folder }}
-          key: cypress-cache-v2-${{ runner.os }}-${{ hashFiles('**/package.json') }}
+          key: cypress-cache-v2-9.5.4-${{ runner.os }}-${{ hashFiles('**/package.json') }}
 
       - name: Reset npm's script shell
         if: ${{ matrix.os == 'windows-latest' }}
         run: |
-          # Resetting npm's script shell for Windows so `yarn run cypress` doesn't have conflicts
           npm config delete script-shell
 
       - name: Run Cypress tests
         uses: cypress-io/github-action@v5
         with:
           working-directory: OpenSearch-Dashboards/plugins/dashboards-maps
-          command: yarn run cypress run --browser electron
+          command: yarn run cypress@9.5.4 cypress run --browser electron
           wait-on: 'http://localhost:5601'
           wait-on-timeout: 300
         env:
           CYPRESS_CACHE_FOLDER: ${{ matrix.cypress_cache_folder }}
 
-      # Screenshots are only captured on failure, will change this once we do visual regression tests
       - uses: actions/upload-artifact@v1
         if: failure()
         with:
           name: cypress-screenshots-${{ matrix.os }}
           path: OpenSearch-Dashboards/plugins/dashboards-maps/cypress/screenshots
 
-      # Test run video was always captured, so this action uses "always()" condition
       - uses: actions/upload-artifact@v1
         if: always()
         with:
