@@ -15,6 +15,7 @@ import { getSavedMapBreadcrumbs } from '../../utils/breadcrumbs';
 import { handleDataLayerRender } from '../../model/layerRenderController';
 import { MapLayerSpecification } from '../../model/mapLayerType';
 import { MapState } from '../../model/mapState';
+import { HeaderVariant } from '../../../../../src/core/public';
 
 interface MapTopNavMenuProps {
   mapIdFromUrl: string;
@@ -48,9 +49,10 @@ export const MapTopNavMenu = ({
     application: { navigateToApp },
     embeddable,
     scopedHistory,
+    uiSettings,
   } = services;
 
-  const [title, setTitle] = useState<string>('');
+  const [title, setTitle] = useState<string>('Untitled');
   const [description, setDescription] = useState<string>('');
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
@@ -65,6 +67,17 @@ export const MapTopNavMenu = ({
     },
     [chrome, navigateToApp]
   );
+  const showActionsInGroup = uiSettings.get('home:useNewHomePage');
+
+  useEffect(() => {
+    if (showActionsInGroup) {
+      chrome.setHeaderVariant?.(HeaderVariant.APPLICATION);
+    }
+
+    return () => {
+      chrome.setHeaderVariant?.();
+    };
+  }, [chrome.setHeaderVariant, showActionsInGroup]);
 
   useEffect(() => {
     const { originatingApp: value } =
@@ -129,6 +142,7 @@ export const MapTopNavMenu = ({
       setDescription,
       mapState,
       originatingApp,
+      showActionsInGroup,
     });
   }, [services, mapIdFromUrl, layers, title, description, mapState, originatingApp]);
 

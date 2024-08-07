@@ -25,6 +25,7 @@ interface GetTopNavConfigParams {
   setDescription: (description: string) => void;
   mapState: MapState;
   originatingApp?: string;
+  showActionsInGroup: boolean;
 }
 
 export const getTopNavConfig = (
@@ -38,6 +39,7 @@ export const getTopNavConfig = (
     setDescription,
     mapState,
     originatingApp,
+    showActionsInGroup,
   }: GetTopNavConfigParams
 ) => {
   const {
@@ -46,6 +48,49 @@ export const getTopNavConfig = (
     scopedHistory,
   } = services;
   const stateTransfer = embeddable.getStateTransfer(scopedHistory);
+  if (showActionsInGroup) {
+    const topNavConfig: TopNavMenuData[] = [
+      {
+        tooltip: i18n.translate('maps.topNav.saveMapButtonLabel', {
+          defaultMessage: `Save`,
+        }),
+        ariaLabel: i18n.translate('maps.topNav.saveButtonAriaLabel', {
+          defaultMessage: 'Save your map',
+        }),
+        testId: 'mapSaveButton',
+        run: (_anchorElement: any) => {
+          const documentInfo = {
+            title,
+            description,
+          };
+          const saveModal = (
+            <SavedObjectSaveModalOrigin
+              documentInfo={documentInfo}
+              onSave={onGetSave(
+                title,
+                originatingApp,
+                mapIdFromUrl,
+                services,
+                layers,
+                mapState,
+                setTitle,
+                setDescription
+              )}
+              objectType={'map'}
+              onClose={() => {}}
+              originatingApp={originatingApp}
+              getAppNameFromId={stateTransfer.getAppNameFromId}
+            />
+          );
+          showSaveModal(saveModal, I18nContext);
+        },
+        iconType: 'save',
+        controlType: 'icon',
+      }
+    ];
+    return topNavConfig;
+  }
+
   const topNavConfig: TopNavMenuData[] = [
     {
       iconType: 'save',
